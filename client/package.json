@@ -1,0 +1,14 @@
+{
+    "name": "Project",
+    "version": "0.1.0",
+    "main": "static-server.js",
+    "dependencies": {
+        "express": "~3.4.4"
+    },
+    "devDependencies": {
+        "bower": "^1.3.11"
+    },
+    "engines": {
+        "node": ">=0.10.29"
+    }
+}
