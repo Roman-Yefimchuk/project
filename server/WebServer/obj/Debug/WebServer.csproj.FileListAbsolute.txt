@@ -1,0 +1,14 @@
+C:\Users\Administrator\Desktop\WebServer\WebServer\bin\Debug\WebServer.exe.config
+C:\Users\Administrator\Desktop\WebServer\WebServer\bin\Debug\WebServer.exe
+C:\Users\Administrator\Desktop\WebServer\WebServer\bin\Debug\WebServer.pdb
+C:\Users\Administrator\Desktop\WebServer\WebServer\obj\Debug\WebServer.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Desktop\WebServer\WebServer\obj\Debug\WebServer.exe
+C:\Users\Administrator\Desktop\WebServer\WebServer\obj\Debug\WebServer.pdb
+C:\Users\Administrator\Desktop\WebServer\WebServer\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Administrator\Desktop\project\server\WebServer\bin\Debug\WebServer.exe.config
+C:\Users\Administrator\Desktop\project\server\WebServer\obj\Debug\WebServer.exe
+C:\Users\Administrator\Desktop\project\server\WebServer\obj\Debug\WebServer.pdb
+C:\Users\Administrator\Desktop\project\server\WebServer\bin\Debug\WebServer.exe
+C:\Users\Administrator\Desktop\project\server\WebServer\bin\Debug\WebServer.pdb
+C:\Users\Administrator\Desktop\project\server\WebServer\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Administrator\Desktop\project\server\WebServer\obj\Debug\WebServer.csprojResolveAssemblyReference.cache
