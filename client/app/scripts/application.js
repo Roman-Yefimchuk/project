@@ -41,6 +41,18 @@ angular.module('application', [
                 options: {
                     title: 'Введення даних'
                 }
+            }).when('/user', {
+                templateUrl: '/app/views/controllers/user-view.html',
+                controller: 'UserController',
+                options: {
+                    title: 'Користувач'
+                }
+            }).when('/master', {
+                templateUrl: '/app/views/controllers/master-view.html',
+                controller: 'MasterController',
+                options: {
+                    title: 'Мастер'
+                }
             }).when('/result', {
                 templateUrl: '/app/views/controllers/result-view.html',
                 controller: 'ResultController',

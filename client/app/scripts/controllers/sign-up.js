@@ -6,12 +6,13 @@ angular.module('application')
 
         '$scope',
         '$location',
+        '$cookies',
         'loaderService',
         'apiService',
         'NAME_PATTERN',
         'PASSWORD_PATTERN',
 
-        function ($scope, $location, loaderService, apiService, NAME_PATTERN, PASSWORD_PATTERN) {
+        function ($scope, $location, $cookies, loaderService, apiService, NAME_PATTERN, PASSWORD_PATTERN) {
 
             function isNameValid() {
                 var name = ($scope.name || '');
@@ -27,24 +28,43 @@ angular.module('application')
                 $scope.name = 'Роман Єфімчук';
                 $scope.password = 'qwerty';
 
-                $scope.$watch('name', function () {
-                    $scope.signUp();
-                });
+                signUp();
             }
 
             function signUp() {
 
                 loaderService.showLoader();
 
+                $scope.errorMessage = null;
+
                 apiService.signUp({
                     name: $scope.name,
                     password: $scope.password
                 }, {
                     success: function (response) {
-                        $location.path('/lectures-list');
+                        switch (response['role']) {
+                            case 'user':
+                            {
+                                $cookies.token = response.token;
+                                $location.path("/user");
+                                break;
+                            }
+                            case 'master':
+                            {
+                                $cookies.token = response.token;
+                                $location.path("/master");
+                                break;
+                            }
+                            default :
+                            {
+                                $scope.errorMessage = "Якась помилка";
+                                loaderService.hideLoader();
+                                break;
+                            }
+                        }
                     },
                     failure: function (error) {
-                        $scope.errorMessage = error.message;
+                        $scope.errorMessage = error;
                         loaderService.hideLoader();
                     }
                 });

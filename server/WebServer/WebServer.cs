@@ -21,9 +21,10 @@ namespace WebServer
                 _listener = new HttpListener();
                 _services = services;
 
+                HttpListenerPrefixCollection prefixCollection = _listener.Prefixes;
                 foreach (IWebServerService service in services)
                 {
-                    _listener.Prefixes.Add(host + service.Path);
+                    prefixCollection.Add(host + service.Path);
                 }
 
                 _listener.Start();
@@ -47,6 +48,7 @@ namespace WebServer
             return null;
         }
 
+
         public void Run()
         {
             ThreadPool.QueueUserWorkItem(o =>
@@ -59,35 +61,55 @@ namespace WebServer
                         ThreadPool.QueueUserWorkItem(c =>
                         {
                             var context = c as HttpListenerContext;
-                            if (context != null)
+                            if (context == null)
                             {
-                                try
+                                return;
+                            }
+
+                            try
+                            {
+                                HttpListenerRequest request = context.Request;
+                                HttpListenerResponse response = context.Response;
+
+                                if ("OPTIONS".Equals(request.HttpMethod))
                                 {
-                                    HttpListenerRequest request = context.Request;
-                                    HttpListenerResponse response = context.Response;
-
-                                    dynamic data = GetData(request);
-
-                                    dynamic serviceResult = GetResponderMethod(request.RawUrl)(data);
-                                    dynamic json = JsonConvert.SerializeObject(serviceResult);
-
-                                    byte[] buffer = Encoding.UTF8.GetBytes(json);
-
-                                    response.ContentType = "application/json";
                                     response.AddHeader("Access-Control-Allow-Origin", "*");
                                     response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
-                                    response.ContentLength64 = buffer.Length;
-                                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                                    response.OutputStream.Close();
+                                    return;
+                                }
+
+                                try
+                                {
+                                    dynamic data = GetData(request);
+
+                                    SendResponse(new
+                                    {
+                                        status = true,
+                                        data = GetResponderMethod(request.RawUrl)(data)
+                                    }, response);
                                 }
                                 catch (Exception e)
                                 {
                                     string error = e.ToString();
                                     Console.WriteLine(error);
+
+                                    string errorMessage = e.Message;
+                                    SendResponse(new
+                                    {
+                                        status = false,
+                                        error = errorMessage
+                                    }, response);
                                 }
-                                finally
-                                {
-                                    context.Response.OutputStream.Close();
-                                }
+                            }
+                            catch (Exception e)
+                            {
+                                string error = e.ToString();
+                                Console.WriteLine(error);
+                            }
+                            finally
+                            {
+                                context.Response.OutputStream.Close();
                             }
                         }, _listener.GetContext());
                     }
@@ -104,6 +126,19 @@ namespace WebServer
         {
             _listener.Stop();
             _listener.Close();
+        }
+
+        private static void SendResponse(dynamic serviceResult, HttpListenerResponse response)
+        {
+            string json = JsonConvert.SerializeObject(serviceResult);
+
+            byte[] buffer = Encoding.UTF8.GetBytes(json);
+
+            response.ContentType = "application/json";
+            response.AddHeader("Access-Control-Allow-Origin", "*");
+            response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
+            response.ContentLength64 = buffer.Length;
+            response.OutputStream.Write(buffer, 0, buffer.Length);
         }
 
         private static dynamic GetData(HttpListenerRequest request)

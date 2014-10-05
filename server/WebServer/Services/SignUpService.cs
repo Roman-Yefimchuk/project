@@ -14,7 +14,23 @@ namespace WebServer.Services
 
         public dynamic ResponderMethod(dynamic request)
         {
-            throw new NotImplementedException();
+
+            var name = (string)request.name;
+            var password = (string)request.password;
+
+            Database database = Database.GetInstance();
+            SessionManager sessionManager = SessionManager.GetInstance();
+
+            User user = database.CreateUser(name, password);
+            Session session = sessionManager.CreateSession(user);
+
+            return new
+            {
+                id = user.Id,
+                role = user.Role,
+                name = user.Name,
+                token = session.Token
+            };
         }
     }
 }

@@ -5,8 +5,10 @@ angular.module('application')
     .controller('IndexController', [
 
         '$scope',
+        'loaderService',
 
-        function ($scope) {
+        function ($scope, loaderService) {
+            loaderService.hideLoader();
         }
     ]
 );

@@ -4,22 +4,17 @@ angular.module('application')
 
     .service('userService', [
 
-        '$rootScope',
         'sessionManagerService',
 
-        function ($rootScope, sessionManagerService) {
+        function (sessionManagerService) {
 
             var user = null;
-
-            $rootScope.$on('user:updateProfile', function (event, data) {
-                user = angular.extend(data, user || {});
-            });
 
             return {
                 getData: function (handler) {
 
-                    var successCallback = function (user, externalNotification) {
-                        (handler.success || angular.noop)(user, externalNotification);
+                    var successCallback = function (user) {
+                        (handler.success || angular.noop)(user);
                     };
 
                     var failureCallback = function (error) {
@@ -42,10 +37,7 @@ angular.module('application')
                                     });
                                 }
                             } else {
-                                failureCallback({
-                                    status: 'NOT_AUTHENTICATED',
-                                    message: 'You are not authenticated'
-                                });
+                                failureCallback("Ви не авторизовані");
                             }
                         },
                         failure: function (error) {
