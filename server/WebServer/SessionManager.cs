@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Server.Models;
 
-namespace WebServer
+namespace Server
 {
     public class Session
     {

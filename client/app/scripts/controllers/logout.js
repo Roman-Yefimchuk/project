@@ -6,12 +6,18 @@ angular.module('application')
 
         '$scope',
         '$location',
-        'socketsService',
+        '$cookies',
+        'userService',
+        'loaderService',
 
-        function ($scope, $location, socketsService) {
+        function ($scope, $location, $cookies, userService, loaderService) {
 
-            socketsService.closeConnection();
-            $location.path('/');
+            loaderService.showLoader();
+
+            userService.logout(function () {
+                $cookies.token = undefined;
+                $location.path('/');
+            });
         }
     ]
 );

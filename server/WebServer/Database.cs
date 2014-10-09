@@ -1,156 +1,374 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using Server.Models;
 
-namespace WebServer
+namespace Server
 {
+    delegate T Execute<out T>(SqlDataReader reader);
 
-    public class User
+    class QueryExecutor<T>
     {
-        public int Id { get; set; }
-        public string Role { get; set; }
-        public string Name { get; set; }
-        public string Password { get; set; }
+        public string Query { get; set; }
+        public Execute<T> Execute;
     }
 
-    public class Database
+    public static class Database
     {
-        private static Database _instance;
         private const string ServerName = "ecom.core.sql";
         private const string DbName = "project";
         private const string UserName = "ctes_user";
-        private const string PasswordName = "ctes_user";
+        private const string Password = "ctes_user";
 
-        private readonly SqlConnection _connection;
+        private const string ConnectionString = "" +
+                                "Data Source=" + ServerName + ";" +
+                                "Initial Catalog=" + DbName + ";" +
+                                "User ID=" + UserName + ";" +
+                                "Password=" + Password + ";" +
+                                "";
 
-        private Database()
+        private static T ExecuteQuery<T>(QueryExecutor<T> queryExecutor)
         {
-            const string connectionString = "" +
-                                            "Data Source=" + ServerName + ";" +
-                                            "Initial Catalog=" + DbName + ";" +
-                                            "User ID=" + UserName + ";" +
-                                            "Password=" + PasswordName + ";" +
-                                            "";
+            var connection = new SqlConnection(ConnectionString);
+            connection.Open();
 
-            _connection = new SqlConnection(connectionString);
-            try
+            var command = new SqlCommand
             {
-                _connection.Open();
-                Console.WriteLine("Connection Opened!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-        }
+                CommandText = queryExecutor.Query,
+                CommandType = CommandType.Text,
+                Connection = connection
+            };
 
-        ~Database()
-        {
-            if (_connection != null)
+            using (SqlDataReader reader = command.ExecuteReader())
             {
                 try
                 {
-                    _connection.Close();
-                    Console.WriteLine("Connection Closed!");
+                    if (queryExecutor.Execute != null)
+                    {
+                        return queryExecutor.Execute(reader);
+                    }
+
+                    return default(T);
                 }
-                catch
+                catch (Exception e)
                 {
-                    Console.WriteLine("Connection Closed!");
+                    if (e is ServerException)
+                    {
+                        throw;
+                    }
+                    throw new ServerException("Не вдалося виконати запит до бази даних", e);
+                }
+                finally
+                {
+                    connection.Close();
                 }
             }
         }
 
-        private bool IsUserExist(string name)
+        private static void ExecuteQuery(string query)
         {
+            var connection = new SqlConnection(ConnectionString);
+            connection.Open();
+
             var command = new SqlCommand
             {
-                CommandText = "SELECT COUNT(*) AS count " +
-                              "FROM users " +
-                              "WHERE name LIKE '" + name + "'",
+                CommandText = query,
                 CommandType = CommandType.Text,
-                Connection = _connection
+                Connection = connection
             };
 
             using (SqlDataReader reader = command.ExecuteReader())
             {
-                if (reader.Read())
-                {
-                    return (int)reader["count"] != 0;
-                }
-                return false;
+                connection.Close();
             }
         }
 
-        public User FindUser(string name, string password)
+        public static void Create()
         {
-
-            var command = new SqlCommand
+            const string path = @"..\..\..\..\db.sql";
+            if (File.Exists(path))
             {
-                CommandText = "SELECT * " +
-                              "FROM users " +
-                              "WHERE name LIKE '" + name + "'",
-                CommandType = CommandType.Text,
-                Connection = _connection
-            };
+                var fileStream = new FileStream(path, FileMode.Open);
+                var streamReader = new StreamReader(fileStream);
+                string query = streamReader.ReadToEnd();
 
-            using (SqlDataReader reader = command.ExecuteReader())
+                ExecuteQuery(query);
+
+                Console.WriteLine("Ok");
+            }
+            else
             {
-                if (reader.Read())
+                Console.WriteLine("File not found");
+            }
+        }
+
+        private static bool IsUserExist(string name)
+        {
+            return ExecuteQuery(new QueryExecutor<bool>()
+            {
+                Query = "SELECT COUNT(*) AS count " +
+                        "FROM users " +
+                        "WHERE name LIKE '" + name + "'",
+                Execute = (reader) =>
                 {
-                    if (((string)reader["password"]).Equals(password))
+                    if (reader.Read())
+                    {
+                        return (int)reader["count"] != 0;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        public static User FindUser(string name, string password)
+        {
+            return ExecuteQuery(new QueryExecutor<User>()
+            {
+                Query = "SELECT * " +
+                        "FROM users " +
+                        "WHERE name LIKE '" + name + "'",
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
+                    {
+                        if (((string)reader["password"]).Equals(password))
+                        {
+                            return new User
+                            {
+                                Id = (int)reader["id"],
+                                Role = (string)reader["role"],
+                                Name = (string)reader["name"],
+                                Password = (string)reader["password"]
+                            };
+                        }
+
+                        throw new ServerException("Невірний пароль");
+                    }
+
+                    throw new ServerException("Користувач " + name + " не знайдений");
+                }
+            });
+        }
+
+        public static User CreateUser(string name, string password)
+        {
+            if (IsUserExist(name))
+            {
+                throw new ServerException("Користувач " + name + " вже зареєстрований");
+            }
+
+            return ExecuteQuery(new QueryExecutor<User>()
+            {
+                Query = "INSERT INTO users(role, name, password) " +
+                        "OUTPUT INSERTED.id " +
+                        "VALUES ('user', '" + name + "', '" + password + "')",
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
                     {
                         return new User
                         {
                             Id = (int)reader["id"],
-                            Role = (string)reader["role"],
-                            Name = (string)reader["name"],
-                            Password = (string)reader["password"]
+                            Role = "user",
+                            Name = name,
+                            Password = password
                         };
                     }
 
-                    throw new Exception("Невірний пароль");
+                    throw new ServerException("Не вдалося створити користувача");
                 }
-            }
-
-            throw new Exception("Користувач " + name + " не знайдений");
+            });
         }
 
-        public User CreateUser(string name, string password)
+        public static EntityType[] FindAllEntityTypes()
         {
-            if (IsUserExist(name))
+            return ExecuteQuery(new QueryExecutor<EntityType[]>()
             {
-                throw new Exception("Користувач " + name + " вже зареєстрований");
-            }
-
-            var command = new SqlCommand
-            {
-                CommandText = "INSERT INTO users(role, name, password) " +
-                              "OUTPUT INSERTED.id " +
-                              "VALUES ('user', '" + name + "', '" + password + "')",
-                CommandType = CommandType.Text,
-                Connection = _connection
-            };
-
-            using (SqlDataReader reader = command.ExecuteReader())
-            {
-                if (reader.Read())
+                Query = "SELECT * " +
+                        "FROM entityTypes",
+                Execute = (reader) =>
                 {
-                    return new User
+                    var entityTypes = new List<EntityType>();
+
+                    while (reader.Read())
                     {
-                        Id = (int)reader["id"],
-                        Role = "user",
-                        Name = name,
-                        Password = password
+                        var entityType = new EntityType()
+                        {
+                            Id = (int)reader["id"],
+                            Name = (string)reader["name"],
+                            Type = (string)reader["type"]
+                        };
+
+                        entityTypes.Add(entityType);
+                    }
+
+                    return entityTypes.ToArray();
+                }
+            });
+        }
+
+        public static EntityType FindEntityTypeById(int id)
+        {
+            return ExecuteQuery(new QueryExecutor<EntityType>()
+            {
+                Query = "SELECT * " +
+                        "FROM entityTypes " +
+                        "WHERE id = " + id,
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
+                    {
+                        return new EntityType()
+                        {
+                            Id = (int)reader["id"],
+                            Name = (string)reader["name"],
+                            Type = (string)reader["type"]
+                        };
+                    }
+
+                    return null;
+                }
+            });
+        }
+
+        public static EntityModel[] FindAllEntityModels()
+        {
+            return ExecuteQuery(new QueryExecutor<EntityModel[]>()
+            {
+                Query = "SELECT * " +
+                        "FROM entityModels",
+                Execute = (reader) =>
+                {
+                    var entityTypes = new List<EntityModel>();
+
+                    while (reader.Read())
+                    {
+                        var entityModel = new EntityModel()
+                        {
+                            Id = (int)reader["id"],
+                            Model = (string)reader["model"],
+                            EntityTypes = (string)reader["entityTypes"]
+                        };
+
+                        entityTypes.Add(entityModel);
+                    }
+
+                    return entityTypes.ToArray();
+                }
+            });
+        }
+
+        public static EntityModel FindEntityModelById(int id)
+        {
+            return ExecuteQuery(new QueryExecutor<EntityModel>()
+            {
+                Query = "SELECT * " +
+                        "FROM entityModels " +
+                        "WHERE id = " + id,
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
+                    {
+                        return new EntityModel()
+                        {
+                            Id = (int)reader["id"],
+                            Model = (string)reader["model"],
+                            EntityTypes = (string)reader["entityTypes"]
+                        };
+                    }
+
+                    return null;
+                }
+            });
+        }
+
+        public static Problem[] FindAllProblems()
+        {
+            return ExecuteQuery(new QueryExecutor<Problem[]>()
+            {
+                Query = "SELECT * " +
+                        "FROM problems",
+                Execute = (reader) =>
+                {
+                    var problems = new List<Problem>();
+
+                    while (reader.Read())
+                    {
+                        var problem = new Problem()
+                        {
+                            Id = (int)reader["id"],
+                            Description = (string)reader["description"],
+                            EntityTypes = (string)reader["entityTypes"]
+                        };
+
+                        problems.Add(problem);
+                    }
+
+                    return problems.ToArray();
+                }
+            });
+        }
+
+
+        public static Problem FindProblemById(int id)
+        {
+            return ExecuteQuery(new QueryExecutor<Problem>()
+            {
+                Query = "SELECT * " +
+                        "FROM problems " +
+                        "WHERE id = " + id,
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
+                    {
+                        return new Problem()
+                        {
+                            Id = (int)reader["id"],
+                            Description = (string)reader["description"],
+                            EntityTypes = (string)reader["entityTypes"]
+                        };
+                    }
+
+                    return null;
+                }
+            });
+        }
+
+        public static Solution FindSolution(int entityTypeId, int entityModelId, int problemId)
+        {
+            return ExecuteQuery(new QueryExecutor<Solution>()
+            {
+                Query = "SELECT * " +
+                        "FROM clusters " +
+                        "WHERE entityTypeId = " + entityTypeId + " AND entityModelId = " + entityModelId + " AND problemId = " + problemId,
+                Execute = (reader) =>
+                {
+                    var suggestions = new List<string>();
+
+                    while (reader.Read())
+                    {
+                        var solution = (string)reader["solution"];
+                        suggestions.Add(solution);
+                    }
+
+                    return new Solution(suggestions)
+                    {
+                        EntityType = FindEntityTypeById(entityTypeId).Name,
+                        EntityModel = FindEntityModelById(entityModelId).Model,
+                        Problem = FindProblemById(problemId).Description
                     };
                 }
-            }
-
-            return null;
+            });
         }
 
-        public static Database GetInstance()
+        public static void AddSolution(int entityTypeId, int entityModelId, int problemId, string solution)
         {
-            return _instance ?? (_instance = new Database());
+            var query = "INSERT INTO clusters(entityTypeId, entityModelId, problemId, solution)" +
+                        "VALUES(" + entityTypeId + ", " + entityModelId + ", " + problemId + ", N'" + solution + "')";
+
+            ExecuteQuery(query);
         }
     }
 }

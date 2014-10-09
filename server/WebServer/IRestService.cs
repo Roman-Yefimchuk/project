@@ -1,10 +1,8 @@
-﻿namespace WebServer
+﻿namespace Server
 {
-    public interface IWebServerService
+    public interface IRestService
     {
-
         string Path { get; }
-
         dynamic ResponderMethod(dynamic request);
     }
 }

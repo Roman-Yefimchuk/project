@@ -1,33 +1,36 @@
 ﻿using System;
-using WebServer.Services;
+using System.IO;
+using Server.Services;
 
-namespace WebServer
+namespace Server
 {
-
     public class Program
     {
+        private const string Host = "http://localhost:8080";
+
         public static void Main(string[] args)
         {
+            //Database.Create();
 
-            var webServer = new WebServer("http://localhost:8080", 
+            var webServer = new Server(Host,
                 new LoginService(),
                 new SignUpService(),
-                new SearchService(),
-                new SessionManagerService()
+                new SessionManagerService(),
+                new DatabaseService()
             );
 
-            Console.WriteLine("Connecting to database...");
-            Database.GetInstance();
-            Console.WriteLine("Connected to database successful.");
-
-            Console.WriteLine("WebServer starting...");
+            Console.WriteLine("Server starting...");
             webServer.Run();
-            Console.WriteLine("WebServer started successful.");
+            Console.WriteLine("Server started successful.");
+
+            Console.WriteLine();
 
             Console.WriteLine("Press a key to quit.");
             Console.ReadKey();
 
-            Console.WriteLine("WebServer stopping...");
+            Console.WriteLine();
+
+            Console.WriteLine("Server stopping...");
             webServer.Stop();
         }
     }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Server.Models;
 
-namespace WebServer.Services
+namespace Server.Services
 {
-    class SignUpService : IWebServerService
+    class SignUpService : IRestService
     {
         public string Path {
             get { return "/api/sign-up/"; }
@@ -18,10 +14,8 @@ namespace WebServer.Services
             var name = (string)request.name;
             var password = (string)request.password;
 
-            Database database = Database.GetInstance();
+            User user = User.Create(name, password);
             SessionManager sessionManager = SessionManager.GetInstance();
-
-            User user = database.CreateUser(name, password);
             Session session = sessionManager.CreateSession(user);
 
             return new

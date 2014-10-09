@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace WebServer.Services
+namespace Server.Services
 {
-    class SessionManagerService : IWebServerService
+    class SessionManagerService : IRestService
     {
         public string Path {
             get { return "/api/session-manager/"; }
@@ -29,7 +29,7 @@ namespace WebServer.Services
                 {
                     if (session == null)
                     {
-                        throw new Exception("Invalid token: " + token);
+                        throw new ServerException("Некоректний токен: " + token);
                     }
 
                     var user = session.User;
@@ -42,9 +42,9 @@ namespace WebServer.Services
                 }
                 case "logout":
                 {
-                    if (session != null)
+                    if (session == null)
                     {
-                        throw new Exception("Invalid token: " + token);
+                        throw new ServerException("Некоректний токен: " + token);
                     }
 
                     sessionManager.CloseSession(token);
@@ -52,7 +52,7 @@ namespace WebServer.Services
                 }
                 default:
                 {
-                    throw new Exception("Unknown action: " + action);
+                    throw new ServerException("Невідома дія: " + action);
                 }
             }
         }

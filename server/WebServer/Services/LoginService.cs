@@ -1,8 +1,9 @@
 ﻿using System;
+using Server.Models;
 
-namespace WebServer.Services
+namespace Server.Services
 {
-    class LoginService : IWebServerService
+    class LoginService : IRestService
     {
         public string Path {
             get { return "/api/login/"; } 
@@ -14,14 +15,12 @@ namespace WebServer.Services
             var name = (string)request.name;
             var password = (string)request.password;
 
-            Database database = Database.GetInstance();
+            User user = User.Find(name, password);
             SessionManager sessionManager = SessionManager.GetInstance();
-
-            User user = database.FindUser(name, password);
 
             if (sessionManager.FindByUserId(user.Id) != null)
             {
-                throw new Exception("Ви вже авторизовані");
+                throw new ServerException("Ви вже авторизовані");
             }
 
             Session session = sessionManager.CreateSession(user);
