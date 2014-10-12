@@ -71,6 +71,29 @@ angular.module('application')
                         url: API_SERVER_URL + '/api/database/'
                     }, handler);
                 },
+                getEntityAccessories: function (handler) {
+                    httpClientService.sendRequest({
+                        method: 'POST',
+                        data: {
+                            action: 'find_all_accessories',
+                            token: $cookies.token || 'empty_token'
+                        },
+                        url: API_SERVER_URL + '/api/database/'
+                    }, handler);
+                },
+                getEntityAccessoryById: function (id, handler) {
+                    httpClientService.sendRequest({
+                        method: 'POST',
+                        data: {
+                            action: 'find_accessory_by_id',
+                            token: $cookies.token || 'empty_token',
+                            data: {
+                                id: id
+                            }
+                        },
+                        url: API_SERVER_URL + '/api/database/'
+                    }, handler);
+                },
                 getProblems: function (handler) {
                     httpClientService.sendRequest({
                         method: 'POST',
@@ -94,11 +117,11 @@ angular.module('application')
                         url: API_SERVER_URL + '/api/database/'
                     }, handler);
                 },
-                getSolution: function (entityTypeId, entityModelId, problemId, handler) {
+                getUserSolution: function (entityTypeId, entityModelId, problemId, handler) {
                     httpClientService.sendRequest({
                         method: 'POST',
                         data: {
-                            action: 'find_solution',
+                            action: 'find_user_solution',
                             token: $cookies.token || 'empty_token',
                             data: {
                                 entityTypeId: entityTypeId,
@@ -109,16 +132,56 @@ angular.module('application')
                         url: API_SERVER_URL + '/api/database/'
                     }, handler);
                 },
-                addSolution: function (entityTypeId, entityModelId, problemId, solution, handler) {
+                addUserSolution: function (entityTypeId, entityModelId, problemId, solution, handler) {
                     httpClientService.sendRequest({
                         method: 'POST',
                         data: {
-                            action: 'add_solution',
+                            action: 'add_user_solution',
                             token: $cookies.token || 'empty_token',
                             data: {
                                 entityTypeId: entityTypeId,
                                 entityModelId: entityModelId,
                                 problemId: problemId,
+                                solution: solution
+                            }
+                        },
+                        url: API_SERVER_URL + '/api/database/'
+                    }, handler);
+                },
+                getMasterSolution: function (data, handler) {
+                    httpClientService.sendRequest({
+                        method: 'POST',
+                        data: {
+                            action: 'find_master_solution',
+                            token: $cookies.token || 'empty_token',
+                            data: data
+                        },
+                        url: API_SERVER_URL + '/api/database/'
+                    }, handler);
+                },
+                addMasterSolution: function (entityTypeId, entityAccessoryId, ports, problem, solution, handler) {
+                    httpClientService.sendRequest({
+                        method: 'POST',
+                        data: {
+                            action: 'add_master_solution',
+                            token: $cookies.token || 'empty_token',
+                            data: {
+                                entityTypeId: entityTypeId,
+                                entityAccessoryId: entityAccessoryId,
+                                ports: (function () {
+                                    var result = "";
+
+                                    _.forEach(ports, function (port) {
+                                        if (result.length == 0) {
+                                            result += port.id + '=' + port.value;
+                                        } else {
+                                            result += ',' + port.id + '=' + port.value;
+                                        }
+                                    });
+
+                                    return result;
+                                })(),
+                                problem: problem,
                                 solution: solution
                             }
                         },

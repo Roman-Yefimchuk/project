@@ -2,17 +2,26 @@
 
     <div class="col-sm-6 col-sm-offset-3 column">
 
-        <div class="text-right" style="margin-bottom: 15px;">
-            <i class="fa fa-user"></i>
-            <span>
-                <b>{{ user.name }}</b>,
+        <div class="row clearfix" style="margin-bottom: 15px;">
+            <span class="col-md-6 text-left">
+                <i class="fa fa-plus"></i>
+                <a href ng-click="addProblematicSituation()">Додати проблемну ситуацію</a>
             </span>
-            <a href="/#/logout">Вихід</a>
+
+            <div class="col-md-6 text-right">
+                <i class="fa fa-user"></i>
+
+                    <span>
+                        <b>{{ user.name }}</b>,
+                    </span>
+
+                <a href="/#/logout">Вихід</a>
+            </div>
         </div>
 
         <section class="panel" style="padding: 15px;">
 
-            <div class="panel-body" style="padding: 0;">
+            <div class="panel-body" style="padding: 0;margin-bottom: -15px;">
 
                 <div class="row clearfix" style="margin-bottom: 15px;">
                     <div class="col-md-4 column" style="margin-top: 6px;">
@@ -25,12 +34,12 @@
                         <div class="btn-group col-md-12" dropdown is-open="dropDownModel.entityTypeDropDown"
                              style="padding: 0;">
                             <span class="btn btn-primary" style="width: 328px;"
-                                  ng-disabled="!userOptionModel.entityType">
+                                  ng-disabled="!entityTypes.length">
                                 <span class="pull-left">
-                                    {{ userOptionModel.entityType && userOptionModel.entityType['name'] || 'Не вибрано' }}
+                                    {{ getEntityTypesSelectTitle() }}
                                 </span>
                             </span>
-                            <span class="btn btn-primary dropdown-toggle" ng-disabled="!userOptionModel.entityType">
+                            <span class="btn btn-primary dropdown-toggle" ng-disabled="!entityTypes.length">
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu pull-right" role="menu">
@@ -52,34 +61,34 @@
                 </div>
 
                 <div class="row clearfix" style="margin-bottom: 15px;">
-                    <div class="col-md-4 column" style="margin-top: 6px;">
+                    <div class="col-md-4 column" style="margin-top: -5px;">
                         <span style="font-size: 14px;">
-                            <b>Модель пристрою:</b>
+                            <b>Тип комплектуючої частини:</b>
                         </span>
                     </div>
                     <div class="col-md-8 column" style="padding-left: 0;">
 
-                        <div class="btn-group col-md-12" dropdown is-open="dropDownModel.entityModelDropDown"
+                        <div class="btn-group col-md-12" dropdown is-open="dropDownModel.entityAccessoryDropDown"
                              style="padding: 0;">
                             <span class="btn btn-primary" style="width: 328px;"
-                                  ng-disabled="!userOptionModel.entityModel">
+                                  ng-disabled="!entityAccessories.length">
                                 <span class="pull-left">
-                                    {{ userOptionModel.entityModel && userOptionModel.entityModel['model'] || 'Не вибрано' }}
+                                    {{ getEntityAccessoriesSelectTitle() }}
                                 </span>
                             </span>
-                            <span class="btn btn-primary dropdown-toggle" ng-disabled="!userOptionModel.entityModel">
+                            <span class="btn btn-primary dropdown-toggle" ng-disabled="!entityAccessories.length">
                                 <span class="caret"></span>
                             </span>
                             <ul class="dropdown-menu pull-right" role="menu">
                                 <li>
-                                    <a href ng-repeat="entityModel in entityModels"
-                                       ng-click="setEntityModel(entityModel)">
+                                    <a href ng-repeat="entityAccessory in entityAccessories"
+                                       ng-click="setEntityAccessory(entityAccessory)">
                                         <i class="fa"
-                                           ng-class="{'fa-circle-o' : entityModel != userOptionModel.entityModel,
-                                                'fa-dot-circle-o' : entityModel == userOptionModel.entityModel}">
+                                           ng-class="{'fa-circle-o' : entityAccessory != userOptionModel.entityAccessory,
+                                                'fa-dot-circle-o' : entityAccessory == userOptionModel.entityAccessory}">
                                         </i>
                                         &nbsp;
-                                        {{ entityModel.model }}
+                                        {{ entityAccessory.name }}
                                     </a>
                                 </li>
                             </ul>
@@ -88,38 +97,63 @@
                     </div>
                 </div>
 
-                <div class="row clearfix">
-                    <div class="col-md-4 column" style="margin-top: 6px;">
-                        <span style="font-size: 14px;">
-                            <b>Проблемна ситуація:</b>
-                        </span>
-                    </div>
-                    <div class="col-md-8 column" style="padding-left: 0;">
+                <div style="border-bottom: 1px solid #D5D5D5;margin-left: -15px;margin-right: -15px;margin-top: 15px;">
+                </div>
 
-                        <div class="btn-group col-md-12" dropdown is-open="dropDownModel.problemDropDown"
-                             style="padding: 0;">
-                            <span class="btn btn-primary" style="width: 328px;"
-                                  ng-disabled="!userOptionModel.problem">
-                                <span class="pull-left">
-                                   {{ userOptionModel.problem && userOptionModel.problem['description'] || 'Не вибрано' }}
-                                </span>
-                            </span>
-                            <span class="btn btn-primary dropdown-toggle" ng-disabled="!userOptionModel.problem">
-                                <span class="caret"></span>
-                            </span>
-                            <ul class="dropdown-menu pull-right" role="menu">
-                                <li>
-                                    <a href ng-repeat="problem in problems"
-                                       ng-click="setProblem(problem)">
-                                        <i class="fa"
-                                           ng-class="{'fa-circle-o' : problem != userOptionModel.problem,
-                                                'fa-dot-circle-o' : problem == userOptionModel.problem}">
-                                        </i>
-                                        &nbsp;
-                                        {{ problem.description }}
-                                    </a>
-                                </li>
-                            </ul>
+                <div class="row clearfix" style="margin-bottom: 15px;">
+                    <div class="col-md-12 column">
+
+                        <div ng-switch="!!userOptionModel.entityAccessory">
+                            <div ng-switch-when="true">
+                                <div class="table-responsive" style="margin-bottom: -20px;margin-top: 15px;">
+                                    <table class="table table-bordered">
+                                        <tbody>
+                                        <tr>
+                                            <th style="width: 1%;" class="text-center">#</th>
+                                            <th style="width: 1%;" class="text-center">Ідентифікатор</th>
+                                            <th class="text-center">Назва порту</th>
+                                            <th class="text-center">Значення напруги на порту</th>
+                                        </tr>
+                                        <tr ng-repeat="port in userOptionModel.entityAccessory['ports']">
+                                            <td style="vertical-align: middle;" class="text-center">{{ $index + 1 }}
+                                            </td>
+                                            <td style="vertical-align: middle;">{{ port.id }}</td>
+                                            <td style="vertical-align: middle;">{{ port.name }}</td>
+                                            <th>
+                                                <input type="number" class="form-control col-md-12 input-sm"
+                                                       autofocus autocomplete="off" style="font-weight: 100;"
+                                                       placeholder="Введіть значення напруги" ng-model="port.value">
+                                            </th>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-md-12 text-center" style="margin-bottom: 5px;margin-top: 15px;">
+                                    <b>Параметри кластеризації</b>
+                                </div>
+
+                                <div class="row clearfix" style="margin-bottom: 0px;">
+                                    <div class="col-md-6 column" style="padding-right: 7.5px;">
+                                        <input type="number" class="form-control col-md-12 input-sm"
+                                               autofocus autocomplete="off" style="font-weight: 100;"
+                                               placeholder="Введіть кількість кластерів"
+                                               ng-model="clusteringOptions.clustersNumber">
+                                    </div>
+                                    <div class="col-md-6 column" style="padding-left: 7.5px;">
+                                        <input type="number" class="form-control col-md-12 input-sm"
+                                               autofocus autocomplete="off" style="font-weight: 100;"
+                                               placeholder="Введіть якість кластеризації"
+                                               ng-model="clusteringOptions.clusteringQuantity">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div ng-switch-when="false">
+                                <div class="col-md-12 text-center" style="margin-top: 15px;">
+                                    Комплектуюча частина не вибрана
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -134,8 +168,8 @@
                 <div class="row clearfix">
                     <div class="col-md-12 column">
                         <span class="btn btn-success"
-                              ng-disabled="!(userOptionModel.entityType && userOptionModel.entityModel && userOptionModel.problem)"
-                              ng-click="getSuggestions()">
+                              ng-disabled="!(userOptionModel.entityType && userOptionModel.entityAccessory)"
+                              ng-click="getSolution()">
                             <i class="fa fa-lightbulb-o"></i>
                             &nbsp;
                             Надати рекомендації по вирішенню проблеми

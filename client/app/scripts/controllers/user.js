@@ -98,7 +98,7 @@ angular.module('application')
             }
 
             function getSolution() {
-                var resultPath = $location.path('/result');
+                var resultPath = $location.path('/user-result');
                 resultPath.search({
                     entityTypeId: userOptionModel.entityType['id'],
                     entityModelId: userOptionModel.entityModel['id'],

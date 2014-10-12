@@ -11,8 +11,20 @@ namespace Server
 
     class QueryExecutor<T>
     {
-        public string Query { get; set; }
+        private string _query;
+        private readonly object[] _arguments;
+
+        public string Query
+        {
+            get { return string.Format(_query, _arguments); }
+            set { _query = value; }
+        }
         public Execute<T> Execute;
+
+        public QueryExecutor(params object[] arguments)
+        {
+            _arguments = arguments;
+        }
     }
 
     public static class Database
@@ -28,6 +40,13 @@ namespace Server
                                 "User ID=" + UserName + ";" +
                                 "Password=" + Password + ";" +
                                 "";
+
+        private static readonly IDictionary<string, string> ScriptsCache;
+
+        static Database()
+        {
+            ScriptsCache = new Dictionary<string, string>();
+        }
 
         private static T ExecuteQuery<T>(QueryExecutor<T> queryExecutor)
         {
@@ -45,12 +64,7 @@ namespace Server
             {
                 try
                 {
-                    if (queryExecutor.Execute != null)
-                    {
-                        return queryExecutor.Execute(reader);
-                    }
-
-                    return default(T);
+                    return queryExecutor.Execute != null ? queryExecutor.Execute(reader) : default(T);
                 }
                 catch (Exception e)
                 {
@@ -67,14 +81,14 @@ namespace Server
             }
         }
 
-        private static void ExecuteQuery(string query)
+        private static void ExecuteQuery(string query, params object[] arguments)
         {
             var connection = new SqlConnection(ConnectionString);
             connection.Open();
 
             var command = new SqlCommand
             {
-                CommandText = query,
+                CommandText = string.Format(query, arguments),
                 CommandType = CommandType.Text,
                 Connection = connection
             };
@@ -85,32 +99,26 @@ namespace Server
             }
         }
 
-        public static void Create()
+        private static string LoadQueryScript(string queryScriptName)
         {
-            const string path = @"..\..\..\..\db.sql";
-            if (File.Exists(path))
+            if (ScriptsCache.ContainsKey(queryScriptName))
             {
-                var fileStream = new FileStream(path, FileMode.Open);
-                var streamReader = new StreamReader(fileStream);
-                string query = streamReader.ReadToEnd();
-
-                ExecuteQuery(query);
-
-                Console.WriteLine("Ok");
+                return ScriptsCache[queryScriptName];
             }
-            else
-            {
-                Console.WriteLine("File not found");
-            }
+
+            var path = @"..\..\SqlQueries\" + queryScriptName + ".sql";
+
+            var queryScript = ResourcesManager.GetStringFromFile(path);
+            ScriptsCache.Add(queryScriptName, queryScript);
+
+            return queryScript;
         }
 
         private static bool IsUserExist(string name)
         {
-            return ExecuteQuery(new QueryExecutor<bool>()
+            return ExecuteQuery(new QueryExecutor<bool>(name)
             {
-                Query = "SELECT COUNT(*) AS count " +
-                        "FROM users " +
-                        "WHERE name LIKE '" + name + "'",
+                Query = LoadQueryScript("is-user-exist"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -124,11 +132,9 @@ namespace Server
 
         public static User FindUser(string name, string password)
         {
-            return ExecuteQuery(new QueryExecutor<User>()
+            return ExecuteQuery(new QueryExecutor<User>(name)
             {
-                Query = "SELECT * " +
-                        "FROM users " +
-                        "WHERE name LIKE '" + name + "'",
+                Query = LoadQueryScript("find-user"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -159,11 +165,9 @@ namespace Server
                 throw new ServerException("Користувач " + name + " вже зареєстрований");
             }
 
-            return ExecuteQuery(new QueryExecutor<User>()
+            return ExecuteQuery(new QueryExecutor<User>(name, password)
             {
-                Query = "INSERT INTO users(role, name, password) " +
-                        "OUTPUT INSERTED.id " +
-                        "VALUES ('user', '" + name + "', '" + password + "')",
+                Query = LoadQueryScript("create-user"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -186,8 +190,7 @@ namespace Server
         {
             return ExecuteQuery(new QueryExecutor<EntityType[]>()
             {
-                Query = "SELECT * " +
-                        "FROM entityTypes",
+                Query = LoadQueryScript("find-all-entity-types"),
                 Execute = (reader) =>
                 {
                     var entityTypes = new List<EntityType>();
@@ -211,11 +214,9 @@ namespace Server
 
         public static EntityType FindEntityTypeById(int id)
         {
-            return ExecuteQuery(new QueryExecutor<EntityType>()
+            return ExecuteQuery(new QueryExecutor<EntityType>(id)
             {
-                Query = "SELECT * " +
-                        "FROM entityTypes " +
-                        "WHERE id = " + id,
+                Query = LoadQueryScript("find-entity-type-by-id"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -237,8 +238,7 @@ namespace Server
         {
             return ExecuteQuery(new QueryExecutor<EntityModel[]>()
             {
-                Query = "SELECT * " +
-                        "FROM entityModels",
+                Query = LoadQueryScript("find-all-entity-models"),
                 Execute = (reader) =>
                 {
                     var entityTypes = new List<EntityModel>();
@@ -262,11 +262,9 @@ namespace Server
 
         public static EntityModel FindEntityModelById(int id)
         {
-            return ExecuteQuery(new QueryExecutor<EntityModel>()
+            return ExecuteQuery(new QueryExecutor<EntityModel>(id)
             {
-                Query = "SELECT * " +
-                        "FROM entityModels " +
-                        "WHERE id = " + id,
+                Query = LoadQueryScript("find-entity-model-by-id"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -288,8 +286,7 @@ namespace Server
         {
             return ExecuteQuery(new QueryExecutor<Problem[]>()
             {
-                Query = "SELECT * " +
-                        "FROM problems",
+                Query = LoadQueryScript("find-all-problems"),
                 Execute = (reader) =>
                 {
                     var problems = new List<Problem>();
@@ -314,11 +311,9 @@ namespace Server
 
         public static Problem FindProblemById(int id)
         {
-            return ExecuteQuery(new QueryExecutor<Problem>()
+            return ExecuteQuery(new QueryExecutor<Problem>(id)
             {
-                Query = "SELECT * " +
-                        "FROM problems " +
-                        "WHERE id = " + id,
+                Query = LoadQueryScript("find-problem-by-id"),
                 Execute = (reader) =>
                 {
                     if (reader.Read())
@@ -336,13 +331,11 @@ namespace Server
             });
         }
 
-        public static Solution FindSolution(int entityTypeId, int entityModelId, int problemId)
+        public static UserSolution FindUserSolution(int entityTypeId, int entityModelId, int problemId)
         {
-            return ExecuteQuery(new QueryExecutor<Solution>()
+            return ExecuteQuery(new QueryExecutor<UserSolution>(entityTypeId, entityModelId, problemId)
             {
-                Query = "SELECT * " +
-                        "FROM clusters " +
-                        "WHERE entityTypeId = " + entityTypeId + " AND entityModelId = " + entityModelId + " AND problemId = " + problemId,
+                Query = LoadQueryScript("find-user-solution"),
                 Execute = (reader) =>
                 {
                     var suggestions = new List<string>();
@@ -353,7 +346,7 @@ namespace Server
                         suggestions.Add(solution);
                     }
 
-                    return new Solution(suggestions)
+                    return new UserSolution(suggestions)
                     {
                         EntityType = FindEntityTypeById(entityTypeId).Name,
                         EntityModel = FindEntityModelById(entityModelId).Model,
@@ -363,12 +356,93 @@ namespace Server
             });
         }
 
-        public static void AddSolution(int entityTypeId, int entityModelId, int problemId, string solution)
+        public static void AddUserSolution(int entityTypeId, int entityModelId, int problemId, string solution)
         {
-            var query = "INSERT INTO clusters(entityTypeId, entityModelId, problemId, solution)" +
-                        "VALUES(" + entityTypeId + ", " + entityModelId + ", " + problemId + ", N'" + solution + "')";
+            var query = LoadQueryScript("add-user-solution");
+            ExecuteQuery(query, entityTypeId, entityModelId, problemId, solution);
+        }
 
-            ExecuteQuery(query);
+        public static Accessory[] FindAllEntityAccessories()
+        {
+            return ExecuteQuery(new QueryExecutor<Accessory[]>()
+            {
+                Query = LoadQueryScript("find-all-entity-accessories"),
+                Execute = (reader) =>
+                {
+                    var accessories = new List<Accessory>();
+
+                    while (reader.Read())
+                    {
+                        var problem = new Accessory()
+                        {
+                            Id = (int)reader["id"],
+                            Name = (string)reader["name"],
+                            EntityTypes = (string)reader["entityTypes"],
+                            Ports = (string)reader["ports"]
+                        };
+
+                        accessories.Add(problem);
+                    }
+
+                    return accessories.ToArray();
+                }
+            });
+        }
+
+        public static Accessory FindEntityAccessoryById(int id)
+        {
+            return ExecuteQuery(new QueryExecutor<Accessory>(id)
+            {
+                Query = LoadQueryScript("find-entity-accessory-by-id"),
+                Execute = (reader) =>
+                {
+                    if (reader.Read())
+                    {
+                        return new Accessory()
+                        {
+                            Id = (int)reader["id"],
+                            Name = (string)reader["name"],
+                            EntityTypes = (string)reader["entityTypes"],
+                            Ports = (string)reader["ports"]
+                        };
+                    }
+
+                    return null;
+                }
+            });
+        }
+
+        public static MasterSolution[] FindAllMasterSolutions(int entityTypeId, int entityAccessoryId)
+        {
+            return ExecuteQuery(new QueryExecutor<MasterSolution[]>(entityTypeId, entityAccessoryId)
+            {
+                Query = LoadQueryScript("find-all-master-solutions"),
+                Execute = (reader) =>
+                {
+                    var solutions = new List<MasterSolution>();
+
+                    while (reader.Read())
+                    {
+                        var masterSolution = new MasterSolution((string)reader["voltageValues"])
+                        {
+                            Id = (int)reader["id"],
+                            EntityTypeId = (int)reader["entityTypeId"],
+                            EntityAccessoryId = (int)reader["entityAccessoryId"],
+                            Problem = (string)reader["problem"],
+                            Solution = (string)reader["solution"]
+                        };
+                        solutions.Add(masterSolution);
+                    }
+
+                    return solutions.ToArray();
+                }
+            });
+        }
+
+        public static void AddMasterSolution(int entityTypeId, int entityAccessoryId, string ports, string problem, string solution)
+        {
+            var query = LoadQueryScript("add-master-solution");
+            ExecuteQuery(query, entityTypeId, entityAccessoryId, ports, problem, solution);
         }
     }
 }

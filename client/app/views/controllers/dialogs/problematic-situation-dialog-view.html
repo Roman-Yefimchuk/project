@@ -1,0 +1,201 @@
+<div>
+    <div class="modal-header">
+        <span class="close" ng-click="cancel()">×</span>
+        <h4 style="margin-bottom: 0;margin-top: 0;">
+            <i class="fa fa-plus"></i>
+            &nbsp;
+            Додати проблемну ситуацію
+        </h4>
+    </div>
+
+    <div class="modal-body">
+
+        <div class="row clearfix">
+
+            <div class="col-md-12 column">
+
+                <label>Тип пристрою</label>
+
+                <div class="input-group task-add">
+
+                    <div class="input-group-btn dropdown" is-open="dropDownModel.entityTypeDropDown">
+
+                        <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                             ng-disabled="!allEntityTypes.length"
+                             tooltip="Вибрати існуючий тип пристрою">
+                            <i class="fa fa-tasks"></i>
+                        </div>
+
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-repeat="_entityType in allEntityTypes"
+                                ng-click="optionModel.entityType = _entityType.name">
+                                <a href>
+                                    <i class="fa"
+                                       ng-class="{'fa-circle-o' : optionModel.entityType != _entityType.name,
+                                                'fa-dot-circle-o' : optionModel.entityType == _entityType.name}">
+                                    </i>
+                                    &nbsp;
+                                    {{ _entityType.name }}
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <div class="form-group" ng-class="{ 'has-feedback' : !!optionModel.entityType }">
+                        <label class="control-label" ng-show="false"></label>
+                        <input type="text" class="form-control dropdown-toggle"
+                               autofocus autocomplete="off" ng-model="optionModel.entityType"
+                               placeholder="Введіть тип пристрою"
+                               style="border-top-right-radius: 4px;border-bottom-right-radius: 4px;">
+
+                        <div class="form-control-feedback" style="top: 0"
+                             ng-show="!!optionModel.entityType">
+                            <i class="fa fa-times" style="cursor: pointer"
+                               tooltip="Очистити"
+                               ng-click="optionModel.entityType = ''"></i>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-12 column" style="margin-top: 15px;">
+
+                <label>Модель пристрою</label>
+
+                <div class="input-group task-add">
+
+                    <div class="input-group-btn dropdown" is-open="dropDownModel.entityModelDropDown">
+
+                        <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                             ng-disabled="!allEntityModels.length"
+                             tooltip="Вибрати існуючу модель пристрою">
+                            <i class="fa fa-tasks"></i>
+                        </div>
+
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-repeat="_entityModel in allEntityModels"
+                                ng-click="optionModel.entityModel = _entityModel.model">
+                                <a href>
+                                    <i class="fa"
+                                       ng-class="{'fa-circle-o' : optionModel.entityModel != _entityModel.model,
+                                                'fa-dot-circle-o' : optionModel.entityModel == _entityModel.model}">
+                                    </i>
+                                    &nbsp;
+                                    {{ _entityModel.model }}
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <div class="form-group" ng-class="{ 'has-feedback' : !!optionModel.entityModel }">
+                        <label class="control-label" ng-show="false"></label>
+                        <input type="text" class="form-control dropdown-toggle"
+                               autofocus autocomplete="off" ng-model="optionModel.entityModel"
+                               placeholder="Введіть модель пристрою"
+                               style="border-top-right-radius: 4px;border-bottom-right-radius: 4px;">
+
+                        <div class="form-control-feedback" style="top: 0"
+                             ng-show="!!optionModel.entityModel">
+                            <i class="fa fa-times" style="cursor: pointer"
+                               tooltip="Очистити"
+                               ng-click="optionModel.entityModel = ''"></i>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-12 column" style="margin-top: 15px;">
+
+                <label>Проблемна ситуація</label>
+
+                <div class="input-group task-add">
+
+                    <div class="input-group-btn dropdown" is-open="dropDownModel.problemDropDown">
+
+                        <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                             ng-disabled="!allProblems.length"
+                             tooltip="Вибрати існуючу проблемну ситуацію">
+                            <i class="fa fa-tasks"></i>
+                        </div>
+
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-repeat="_problem in allProblems"
+                                ng-click="optionModel.problem = _problem.description">
+                                <a href>
+                                    <i class="fa"
+                                       ng-class="{'fa-circle-o' : optionModel.problem != _problem.description,
+                                                'fa-dot-circle-o' : optionModel.problem == _problem.description}">
+                                    </i>
+                                    &nbsp;
+                                    {{ _problem.description }}
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <div class="form-group" ng-class="{ 'has-feedback' : !!optionModel.problem }">
+                        <label class="control-label" ng-show="false"></label>
+                        <input type="text" class="form-control dropdown-toggle"
+                               autofocus autocomplete="off" ng-model="optionModel.problem"
+                               placeholder="Введіть проблемну ситуацію"
+                               style="border-top-right-radius: 4px;border-bottom-right-radius: 4px;">
+
+                        <div class="form-control-feedback" style="top: 0"
+                             ng-show="!!optionModel.problem">
+                            <i class="fa fa-times" style="cursor: pointer"
+                               tooltip="Очистити"
+                               ng-click="optionModel.problem = ''"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-12 column" style="margin-top: 15px;">
+
+                <label>Вирішення проблеми</label>
+
+                <div class="form-group" ng-class="{ 'has-feedback' : !!optionModel.solution }"
+                        style="margin-bottom: 0;">
+                    <label class="control-label" ng-show="false"></label>
+                    <input type="text" class="form-control dropdown-toggle"
+                           autofocus autocomplete="off" ng-model="optionModel.solution"
+                           placeholder="Введіть вирішення проблеми">
+
+                    <div class="form-control-feedback" style="top: 0"
+                         ng-show="!!optionModel.solution">
+                        <i class="fa fa-times" style="cursor: pointer"
+                           tooltip="Очистити"
+                           ng-click="optionModel.solution = ''"></i>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div class="modal-footer ng-scope" style="margin-top: 0">
+        <span class="btn btn-danger btn-sm" ng-click="cancel()">
+            <i class="fa fa-reply"></i>
+            &nbsp;
+            Назад
+        </span>
+        <span class="btn btn-success btn-sm" ng-click="add()"
+              ng-disabled="isAddButtonDisabled()">
+            <i class="fa fa-plus"></i>
+            &nbsp;
+            Додати
+        </span>
+    </div>
+</div>

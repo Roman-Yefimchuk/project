@@ -26,7 +26,7 @@ angular.module('application')
             }
 
             function quickLogin() {
-                $scope.name = 'User';
+                $scope.name = 'Master';
                 $scope.password = 'qwerty';
 
                 login();

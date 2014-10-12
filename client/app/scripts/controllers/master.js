@@ -4,155 +4,131 @@ angular.module('application')
 
     .controller('MasterController', [
 
+        '$rootScope',
         '$scope',
         '$location',
+        '$q',
         'loaderService',
         'userService',
         'apiService',
+        'dialogsService',
 
-        function ($scope, $location, loaderService, userService, apiService) {
+        function ($rootScope, $scope, $location, $q, loaderService, userService, apiService, dialogsService) {
 
             var dropDownModel = {
                 entityTypeDropDown: false,
-                entityModelDropDown: false,
-                problemDropDown: false
+                entityAccessoryDropDown: false
             };
 
             var userOptionModel = {
                 entityType: null,
-                entityModel: null,
-                problem: null
+                entityAccessory: null
             };
 
-            var allEntityModels = null;
-            var allProblems = null;
+            var clusteringOptions = {
+                clustersNumber: 0,
+                clusteringQuantity: 0
+            };
+
+            var allEntityTypes = null;
+            var allEntityAccessories = null;
 
             function setEntityType(entityType) {
 
                 if (userOptionModel.entityType != entityType) {
                     userOptionModel.entityType = entityType;
 
-                    updateEntityModels();
-                    updateProblems();
+                    updateEntityAccessories();
                 }
 
                 dropDownModel.entityTypeDropDown = false;
             }
 
-            function setEntityModel(entityModel) {
+            function setEntityAccessory(entityAccessory) {
 
-                if (userOptionModel.entityModel != entityModel) {
-                    userOptionModel.entityModel = entityModel;
-                }
+                if (userOptionModel.entityAccessory != entityAccessory) {
 
-                dropDownModel.entityModelDropDown = false;
-            }
-
-            function setProblem(problem) {
-                userOptionModel.problem = problem;
-                dropDownModel.problemDropDown = false;
-            }
-
-            function updateEntityModels() {
-
-                function recycleEntityModels() {
-                    var entityType = userOptionModel.entityType;
-                    var entityModels = [];
-
-                    _.forEach(allEntityModels, function (entityModel) {
-                        if (entityModel.entityTypes == '#any') {
-                            entityModels.push(entityModel);
-                        } else {
-                            if (_.contains(entityModel.entityTypes, entityType.type)) {
-                                entityModels.push(entityModel);
-                            }
-                        }
+                    _.forEach(entityAccessory.ports, function (port) {
+                        port.value = '0';
                     });
 
-                    if (!_.contains(entityModels, userOptionModel.entityModel)) {
-                        userOptionModel.entityModel = entityModels[0];
+                    userOptionModel.entityAccessory = entityAccessory;
+                }
+
+                dropDownModel.entityAccessoryDropDown = false;
+            }
+
+            function updateEntityAccessories() {
+                var entityType = userOptionModel.entityType;
+                var entityAccessories = [];
+
+                _.forEach(allEntityAccessories, function (entityAccessory) {
+                    if (entityAccessory.entityTypes == '#any') {
+                        entityAccessories.push(entityAccessory);
+                    } else {
+                        if (_.contains(entityAccessory.entityTypes, entityType.type)) {
+                            entityAccessories.push(entityAccessory);
+                        }
                     }
+                });
 
-                    $scope.entityModels = entityModels;
+                if (!_.contains(entityAccessories, userOptionModel.entityAccessory)) {
+                    userOptionModel.entityAccessory = null;
                 }
 
-                if (allEntityModels) {
-                    recycleEntityModels();
-                } else {
-                    apiService.getEntityModels({
-                        success: function (data) {
-                            allEntityModels = [];
-
-                            _.forEach(data, function (item) {
-                                allEntityModels.push({
-                                    id: item['Id'],
-                                    model: item['Model'],
-                                    entityTypes: item['EntityTypes'] == '#any' && '#any' || item['EntityTypes'].split(',')
-                                });
-                            });
-
-                            recycleEntityModels();
-                        },
-                        failure: function (error) {
-                            alert(error);
-                        }
-                    });
-                }
+                $scope.entityAccessories = entityAccessories;
             }
 
-            function updateProblems() {
+            function getSolution() {
 
-                function recycleProblems() {
-                    var entityType = userOptionModel.entityType;
-                    var problems = [];
-
-                    _.forEach(allProblems, function (problem) {
-                        if (problem.entityTypes == '#any') {
-                            problems.push(problem);
-                        } else {
-                            if (_.contains(problem.entityTypes, entityType.type)) {
-                                problems.push(problem);
-                            }
-                        }
-                    });
-
-                    if (!_.contains(problems, userOptionModel.problem)) {
-                        userOptionModel.problem = problems[0];
-                    }
-
-                    $scope.problems = problems;
-                }
-
-                if (allProblems) {
-                    recycleProblems();
-                } else {
-                    apiService.getProblems({
-                        success: function (data) {
-                            allProblems = [];
-
-                            _.forEach(data, function (item) {
-                                allProblems.push({
-                                    id: item['Id'],
-                                    description: item['Description'],
-                                    entityTypes: item['EntityTypes'] == '#any' && '#any' || item['EntityTypes'].split(',')
-                                });
-                            });
-
-                            recycleProblems();
-                        },
-                        failure: function (error) {
-                            alert(error);
-                        }
-                    });
-                }
-            }
-
-            function getSuggestions() {
-                var resultPath = $location.path('/result');
-                resultPath.search({
+                $rootScope.data = {
                     entityTypeId: userOptionModel.entityType['id'],
-                    entityModelId: userOptionModel.entityModel['id'],
-                    problemId: userOptionModel.problem['id']
+                    entityAccessoryId: userOptionModel.entityAccessory['id'],
+                    ports: (function () {
+
+                        var ports = [];
+                        _.forEach(userOptionModel.entityAccessory['ports'], function (port) {
+                            ports.push({
+                                id: port.id,
+                                value: port.value
+                            });
+                        });
+
+                        return ports;
+                    })(),
+                    dimension: userOptionModel.entityAccessory['ports'].length,
+                    clustersNumber: clusteringOptions.clustersNumber,
+                    clusteringQuantity: clusteringOptions.clusteringQuantity
+                };
+
+                $location.path('/master-result');
+            }
+
+            function getEntityTypesSelectTitle() {
+                if ($scope.entityTypes['length'] > 0) {
+                    if (userOptionModel.entityType) {
+                        return userOptionModel.entityType['name'];
+                    }
+                    return 'Не вибрано';
+                }
+                return 'Немає доступних варіантів';
+            }
+
+            function getEntityAccessoriesSelectTitle() {
+                if ($scope.entityAccessories['length'] > 0) {
+                    if (userOptionModel.entityAccessory) {
+                        return userOptionModel.entityAccessory['name'];
+                    }
+                    return 'Не вибрано';
+                }
+                return 'Немає доступних варіантів';
+            }
+
+            function addProblematicSituation() {
+                dialogsService.addProblematicSituation({
+                    onAdd: function (entityType, entityModel, solution, closeCallback) {
+                        closeCallback();
+                    }
                 });
             }
 
@@ -160,46 +136,112 @@ angular.module('application')
             $scope.userOptionModel = userOptionModel;
 
             $scope.entityTypes = [];
-            $scope.entityModels = [];
-            $scope.problems = [];
+            $scope.entityAccessories = [];
+
+            $scope.clusteringOptions = clusteringOptions;
 
             $scope.setEntityType = setEntityType;
-            $scope.setEntityModel = setEntityModel;
-            $scope.setProblem = setProblem;
+            $scope.setEntityAccessory = setEntityAccessory;
 
-            $scope.updateEntityModels = updateEntityModels;
-            $scope.updateProblems = updateProblems;
+            $scope.updateEntityAccessories = updateEntityAccessories;
 
-            $scope.getSuggestions = getSuggestions;
+            $scope.getSolution = getSolution;
+
+            $scope.getEntityTypesSelectTitle = getEntityTypesSelectTitle;
+            $scope.getEntityAccessoriesSelectTitle = getEntityAccessoriesSelectTitle;
+
+            $scope.addProblematicSituation = addProblematicSituation;
 
             loaderService.showLoader();
 
             userService.getData({
                 success: function (user) {
 
-                    apiService.getEntityTypes({
-                        success: function (data) {
+                    function get$Q(callback) {
+                        var deferred = $q.defer();
+                        callback(deferred.resolve, deferred.reject);
+                        return deferred.promise;
+                    }
 
-                            var entityTypes = [];
+                    $q.all({
+                        entityTypes: get$Q(function (resolve, reject) {
+                            apiService.getEntityTypes({
+                                success: function (data) {
 
-                            _.forEach(data, function (item) {
-                                entityTypes.push({
-                                    id: item['Id'],
-                                    name: item['Name'],
-                                    type: item['Type']
-                                });
+                                    var entityTypes = [];
+
+                                    _.forEach(data, function (item) {
+                                        entityTypes.push({
+                                            id: item['Id'],
+                                            name: item['Name'],
+                                            type: item['Type']
+                                        });
+                                    });
+
+                                    resolve(entityTypes);
+                                },
+                                failure: function (error) {
+                                    reject(error);
+                                }
                             });
+                        }),
+                        entityAccessories: get$Q(function (resolve, reject) {
+                            apiService.getEntityAccessories({
+                                success: function (data) {
 
-                            userOptionModel.entityType = entityTypes[0];
+                                    function getPorts(data) {
 
-                            $scope.entityTypes = entityTypes;
-                            $scope.user = user;
+                                        var ports = data.split('|');
+                                        var result = [];
 
-                            loaderService.hideLoader();
-                        },
-                        failure: function (error) {
-                            alert(error);
-                        }
+                                        _.forEach(ports, function (port) {
+                                            port = port.split(',');
+                                            result.push({
+                                                id: port[0],
+                                                name: port[1],
+                                                value: '0'
+                                            });
+                                        });
+
+                                        return result;
+                                    }
+
+                                    var entityAccessories = [];
+
+                                    _.forEach(data, function (item) {
+                                        if (item['EntityTypes'] == '#any') {
+                                            entityAccessories.push({
+                                                id: item['Id'],
+                                                name: item['Name'],
+                                                entityTypes: '#any',
+                                                ports: getPorts(item['Ports'])
+                                            });
+                                        } else {
+                                            entityAccessories.push({
+                                                id: item['Id'],
+                                                name: item['Name'],
+                                                entityTypes: item['EntityTypes'].split(','),
+                                                ports: getPorts(item['Ports'])
+                                            });
+                                        }
+                                    });
+
+                                    resolve(entityAccessories);
+                                },
+                                failure: function (error) {
+                                    reject(error);
+                                }
+                            });
+                        })
+                    }).then(function (values) {
+
+                        allEntityTypes = values.entityTypes;
+                        allEntityAccessories = values.entityAccessories;
+
+                        $scope.entityTypes = values.entityTypes;
+                        $scope.user = user;
+
+                        loaderService.hideLoader();
                     });
                 },
                 failure: function (error) {

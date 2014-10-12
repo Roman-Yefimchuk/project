@@ -42,14 +42,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ListUtility.cs" />
+    <Compile Include="Common\Point.cs" />
+    <Compile Include="Common\PointCollection.cs" />
+    <Compile Include="Core\KMeans.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="Models\Accessory.cs" />
     <Compile Include="Models\EntityModel.cs" />
     <Compile Include="Models\EntityType.cs" />
     <Compile Include="Models\Problem.cs" />
-    <Compile Include="Models\Solution.cs" />
+    <Compile Include="Models\MasterSolution.cs" />
+    <Compile Include="Models\UserSolution.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourcesManager.cs" />
     <Compile Include="ServerException.cs" />
     <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="Services\LoginService.cs" />
@@ -66,7 +73,21 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Core\" />
+    <Content Include="SqlQueries\add-master-solution.sql" />
+    <Content Include="SqlQueries\find-all-master-solutions.sql" />
+    <Content Include="SqlQueries\add-user-solution.sql" />
+    <Content Include="SqlQueries\find-entity-accessory-by-id.sql" />
+    <Content Include="SqlQueries\find-all-entity-accessories.sql" />
+    <Content Include="SqlQueries\find-user-solution.sql" />
+    <Content Include="SqlQueries\find-all-entity-models.sql" />
+    <Content Include="SqlQueries\find-all-problems.sql" />
+    <Content Include="SqlQueries\find-entity-model-by-id.sql" />
+    <Content Include="SqlQueries\find-problem-by-id.sql" />
+    <Content Include="SqlQueries\find-entity-type-by-id.sql" />
+    <Content Include="SqlQueries\find-all-entity-types.sql" />
+    <Content Include="SqlQueries\create-user.sql" />
+    <Content Include="SqlQueries\find-user.sql" />
+    <Content Include="SqlQueries\is-user-exist.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

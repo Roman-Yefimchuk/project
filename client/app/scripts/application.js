@@ -35,17 +35,17 @@ angular.module('application', [
                 options: {
                     title: 'Увійти'
                 }
-            }).when('/input', {
-                templateUrl: '/app/views/controllers/input-view.html',
-                controller: 'InputController',
-                options: {
-                    title: 'Введення даних'
-                }
             }).when('/user', {
                 templateUrl: '/app/views/controllers/user-view.html',
                 controller: 'UserController',
                 options: {
                     title: 'Користувач'
+                }
+            }).when('/user-result', {
+                templateUrl: '/app/views/controllers/user-result-view.html',
+                controller: 'UserResultController',
+                options: {
+                    title: 'Результат'
                 }
             }).when('/master', {
                 templateUrl: '/app/views/controllers/master-view.html',
@@ -53,9 +53,9 @@ angular.module('application', [
                 options: {
                     title: 'Мастер'
                 }
-            }).when('/result', {
-                templateUrl: '/app/views/controllers/result-view.html',
-                controller: 'ResultController',
+            }).when('/master-result', {
+                templateUrl: '/app/views/controllers/master-result-view.html',
+                controller: 'MasterResultController',
                 options: {
                     title: 'Результат'
                 }

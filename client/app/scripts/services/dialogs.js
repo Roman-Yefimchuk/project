@@ -34,6 +34,17 @@ angular.module('application')
                             }
                         }
                     });
+                },
+                addProblematicSituation: function (options) {
+                    return open({
+                        templateUrl: '/app/views/controllers/dialogs/problematic-situation-dialog-view.html',
+                        controller: 'ProblematicSituationDialogController',
+                        resolve: {
+                            options: function () {
+                                return options;
+                            }
+                        }
+                    });
                 }
             };
         }

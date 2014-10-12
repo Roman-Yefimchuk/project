@@ -1,0 +1,175 @@
+<div class="row clearfix" style="margin-top: 15px">
+
+    <div class="col-sm-6 col-sm-offset-3 column">
+
+        <div class="text-right" style="margin-bottom: 15px;">
+            <i class="fa fa-user"></i>
+            <span>
+                <b>{{ user.name }}</b>,
+            </span>
+            <a href="/#/logout">Вихід</a>
+        </div>
+
+        <section class="panel" style="padding: 15px;">
+
+            <div class="panel-body" style="padding: 0;">
+
+                <div class="row clearfix" style="margin-bottom: 15px;">
+                    <div class="col-md-12 column text-center">
+                        <span>
+                            <b>Модель: {{ entityType }}, комплектуюча частина: {{ entityAccessory }}</b>
+                        </span>
+                    </div>
+                </div>
+
+                <div style="border-bottom: 1px solid #D5D5D5;margin-left: -15px;margin-right: -15px;margin-top: 15px;">
+                </div>
+
+                <div ng-switch="suggestions.length > 0">
+                    <div ng-switch-when="true">
+                        <div class="table-responsive" style="margin-bottom: -20px;margin-top: 15px;">
+                            <table class="table table-bordered">
+                                <tbody>
+                                <tr>
+                                    <th style="width: 1%;" class="text-center">#</th>
+                                    <th class="text-center">Проблема</th>
+                                    <th class="text-center">Вирішення проблеми</th>
+                                </tr>
+                                <tr ng-repeat="suggestion in suggestions">
+                                    <td class="text-center">{{ $index + 1 }}</td>
+                                    <td>{{ suggestion.problem }}</td>
+                                    <td>{{ suggestion.solution }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div ng-switch-when="false">
+                        <div class="col-md-12 text-center" style="margin-top: 15px;">
+                            По вашому запиту нічого не знайдено
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="border-bottom: 1px solid #D5D5D5;margin-left: -15px;margin-right: -15px;margin-top: 15px;">
+            </div>
+
+            <div style="margin-top: 15px;">
+                <div class="row clearfix">
+                    <div class="col-md-9 column">
+
+                        <div class="row clearfix">
+
+                            <div class="col-md-12 column" style="margin-bottom: 15px;">
+
+                                <label>Яка саме у вас пробема?</label>
+
+                                <div class="input-group task-add">
+
+                                    <div class="input-group-btn dropdown" is-open="showProblemDropdown">
+
+                                        <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                             ng-disabled="!suggestions.length"
+                                             tooltip="Вибрати існуючу проблему">
+                                            <i class="fa fa-tasks"></i>
+                                        </div>
+
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li ng-repeat="suggestion in suggestions"
+                                                ng-click="setExistProblem(suggestion.problem)">
+                                                <a href>{{ suggestion.problem }}</a>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+
+                                    <div class="form-group" ng-class="{ 'has-feedback' : !!masterProblem }">
+                                        <label class="control-label" ng-show="false"></label>
+                                        <input type="text" class="form-control dropdown-toggle"
+                                               autofocus autocomplete="off" ng-model="masterProblem"
+                                               placeholder="Введіть існуючу проблему"
+                                               style="border-top-right-radius: 4px;border-bottom-right-radius: 4px;">
+
+                                        <div class="form-control-feedback" style="top: 0"
+                                             ng-show="!!masterProblem">
+                                            <i class="fa fa-times" style="cursor: pointer"
+                                               tooltip="Очистити"
+                                               ng-click="clear('masterProblem')"></i>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-12 column">
+
+                                <label>Що саме вам допомогло вирішити проблему?</label>
+
+                                <div class="input-group task-add">
+
+                                    <div class="input-group-btn dropdown" is-open="showSolutionDropdown">
+
+                                        <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                             ng-disabled="!suggestions.length"
+                                             tooltip="Вибрати існуюче вирішення проблеми">
+                                            <i class="fa fa-tasks"></i>
+                                        </div>
+
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li ng-repeat="suggestion in suggestions"
+                                                ng-click="setExistSolution(suggestion.solution)">
+                                                <a href>{{ suggestion.solution }}</a>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+
+                                    <div class="form-group" ng-class="{ 'has-feedback' : !!masterSolution }">
+                                        <label class="control-label" ng-show="false"></label>
+                                        <input type="text" class="form-control dropdown-toggle"
+                                               autofocus autocomplete="off" ng-model="masterSolution"
+                                               placeholder="Введіть вирішення проблеми"
+                                               style="border-top-right-radius: 4px;border-bottom-right-radius: 4px;">
+
+                                        <div class="form-control-feedback" style="top: 0"
+                                             ng-show="!!masterSolution">
+                                            <i class="fa fa-times" style="cursor: pointer"
+                                               tooltip="Очистити"
+                                               ng-click="clear('masterSolution')"></i>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-3 column">
+
+                        <div class="row clearfix">
+
+                            <div class="btn btn-success" ng-disabled="!masterProblem || !masterSolution"
+                                 ng-click="sendMasterSolution()"
+                                 style="margin-top: 23px;height: 106px;padding-top: 40px;">
+                                <i class="fa fa-paper-plane"></i>
+                                &nbsp;
+                                Відправити
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+
+</div>

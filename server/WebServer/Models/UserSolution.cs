@@ -2,25 +2,25 @@
 
 namespace Server.Models
 {
-    public class Suggestion
+    public class UserSolution
     {
-        public string Text { get; set; }
-        public int Weight { get; set; }
-    }
+        public class Suggestion
+        {
+            public string Text { get; set; }
+            public int Weight { get; set; }
+        }
 
-    internal class Counter
-    {
-        public int Count;
-    }
+        public class Counter
+        {
+            public int Count;
+        }
 
-    public class Solution
-    {
         public string EntityType { get; set; }
         public string EntityModel { get; set; }
         public string Problem { get; set; }
         public Suggestion[] Suggestions { get; set; }
 
-        public Solution(IEnumerable<string> suggestions)
+        public UserSolution(IEnumerable<string> suggestions)
         {
             var suggestionGroups = new Dictionary<string, Counter>();
 
@@ -54,9 +54,14 @@ namespace Server.Models
             Suggestions = result.ToArray();
         }
 
-        public static Solution Find(int entityTypeId, int entityModelId, int problemId)
+        public static UserSolution Find(int entityTypeId, int entityModelId, int problemId)
         {
-            return Database.FindSolution(entityTypeId, entityModelId, problemId);
+            return Database.FindUserSolution(entityTypeId, entityModelId, problemId);
+        }
+
+        public static void Add(int entityTypeId, int entityModelId, int problemId, string solution)
+        {
+            Database.AddUserSolution(entityTypeId, entityModelId, problemId, solution);
         }
     }
 }

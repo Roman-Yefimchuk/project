@@ -68,7 +68,7 @@
 
                                 <div class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                      ng-disabled="!suggestions.length"
-                                     tooltip="Вибрати існуюче рішення">
+                                     tooltip="Вибрати існуюче вирішення проблеми">
                                     <i class="fa fa-tasks"></i>
                                 </div>
 
@@ -90,7 +90,8 @@
                                 <div class="form-control-feedback" style="top: 0"
                                      ng-show="!!userSolution">
                                     <i class="fa fa-times" style="cursor: pointer"
-                                       ng-click="userSolution = ''"></i>
+                                       tooltip="Очистити"
+                                       ng-click="clearSolution()"></i>
                                 </div>
                             </div>
 

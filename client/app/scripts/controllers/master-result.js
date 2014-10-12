@@ -2,36 +2,51 @@
 
 angular.module('application')
 
-    .controller('ResultController', [
+    .controller('MasterResultController', [
 
+        '$rootScope',
         '$scope',
-        '$routeParams',
         '$location',
         'apiService',
         'loaderService',
         'userService',
         'dialogsService',
 
-        function ($scope, $routeParams, $location, apiService, loaderService, userService, dialogsService) {
+        function ($rootScope, $scope, $location, apiService, loaderService, userService, dialogsService) {
 
-            var entityTypeId = $routeParams.entityTypeId;
-            var entityModelId = $routeParams.entityModelId;
-            var problemId = $routeParams.problemId;
+            var data = $rootScope.data;
+            $rootScope.data = null;
 
-            function setExistSolution(solution) {
-                $scope.userSolution = solution;
+            function setExistProblem(problem) {
+                $scope.masterProblem = problem;
                 $scope.showDropdown = false;
             }
 
-            function sendUserSolution() {
-                apiService.addSolution(entityTypeId, entityModelId, problemId, $scope.userSolution, {
+            function setExistSolution(solution) {
+                $scope.masterSolution = solution;
+                $scope.showDropdown = false;
+            }
+
+            function clear(property) {
+                $scope[property] = '';
+            }
+
+            function sendMasterSolution() {
+
+                var entityTypeId = $scope.entityTypeId;
+                var entityAccessoryId = $scope.entityAccessoryId;
+                var ports = $scope.ports;
+                var problem = $scope.masterProblem;
+                var solution = $scope.masterSolution;
+
+                apiService.addMasterSolution(entityTypeId, entityAccessoryId, ports, problem, solution, {
                     success: function () {
                         dialogsService.showAlert({
                             title: "Успіх",
                             message: "Ви успішно внесли свій вклад у вирішення даної проблеми",
                             onClose: function (closeCallback) {
                                 closeCallback();
-                                $location.path('/user');
+                                $location.path('/master');
                             }
                         });
                     },
@@ -47,10 +62,15 @@ angular.module('application')
                 });
             }
 
-            $scope.showDropdown = false;
-            $scope.userSolution = "";
+            $scope.showProblemDropdown = false;
+            $scope.showSolutionDropdown = false;
 
-            $scope.sendUserSolution = sendUserSolution;
+            $scope.masterProblem = "";
+            $scope.masterSolution = "";
+
+            $scope.sendMasterSolution = sendMasterSolution;
+            $scope.clear = clear;
+            $scope.setExistProblem = setExistProblem;
             $scope.setExistSolution = setExistSolution;
 
             loaderService.showLoader();
@@ -60,25 +80,25 @@ angular.module('application')
 
                     $scope.user = user;
 
-                    apiService.getSolution(entityTypeId, entityModelId, problemId, {
+                    apiService.getMasterSolution(data, {
                         success: function (response) {
 
-                            $scope.entityType = response['EntityType'];
-                            $scope.entityModel = response['EntityModel'];
-                            $scope.problem = response['Problem'];
+                            $scope.entityTypeId = response['entityTypeId'];
+                            $scope.entityAccessoryId = response['entityAccessoryId'];
+                            $scope.entityType = response['entityType'];
+                            $scope.entityAccessory = response['entityAccessory'];
+                            $scope.ports = response['ports'];
 
                             var suggestions = [];
 
-                            _.forEach(response['Suggestions'], function (suggestion) {
+                            _.forEach(response['suggestions'], function (suggestion) {
                                 suggestions.push({
-                                    text: suggestion['Text'],
-                                    weight: suggestion['Weight']
+                                    problem: suggestion['Problem'],
+                                    solution: suggestion['Solution']
                                 });
                             });
 
-                            $scope.suggestions = _.sortBy(suggestions, function (suggestion) {
-                                return -suggestion.weight;
-                            });
+                            $scope.suggestions = suggestions;
 
                             loaderService.hideLoader();
                         },
